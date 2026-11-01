@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Treino para o Concurso</title>
+  <meta name="description" content="Teste de escolha múltipla para preparação do concurso de Técnico Superior (IPCB/UPCB).">
+  <script>
+    /* Aplica o tema guardado antes de desenhar a página (evita "flash"). */
+    try {
+      var s = JSON.parse(localStorage.getItem('upcb_teste_v130') || 'null');
+      if (s && (s.theme === 'light' || s.theme === 'dark')) document.documentElement.setAttribute('data-theme', s.theme);
+    } catch (e) { /* armazenamento indisponível */ }
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar para o conteúdo</a>
+
+  <header class="topbar">
+    <div class="topbar__inner">
+      <span class="brand">IPCB · Treino</span>
+      <div id="score" class="score" aria-label="Pontuação atual" hidden>
+        <span><span class="score__label">Respondidas</span> <strong id="score-answered">0</strong></span>
+        <span class="score__ok"><span aria-hidden="true">✓</span> <span class="score__label">Certas</span> <strong id="score-correct">0</strong></span>
+        <span class="score__bad"><span aria-hidden="true">✗</span> <span class="score__label">Erradas</span> <strong id="score-wrong">0</strong></span>
+        <span><strong id="score-pct">0%</strong></span>
+      </div>
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="Mudar para tema escuro">
+        <span aria-hidden="true" id="theme-icon">☾</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main" class="container" tabindex="-1">
+
+    <!-- ECRÃ INICIAL -->
+    <section id="screen-start" class="screen" aria-labelledby="start-title">
+      <h1 id="start-title">Treino para o Concurso</h1>
+      <p class="lead">Preparação para o concurso de Técnico Superior (IPCB/UPCB). Escolha um modo para começar.</p>
+
+      <div class="card">
+        <h2 class="h3">Documentos e número de perguntas</h2>
+        <table class="sections-table">
+          <thead><tr><th scope="col">Documento</th><th scope="col" class="num">Perguntas</th></tr></thead>
+          <tbody id="sections-body"></tbody>
+          <tfoot><tr><th scope="row">Total</th><td class="num" id="sections-total"></td></tr></tfoot>
+        </table>
+      </div>
+
+      <div class="modes">
+        <button type="button" class="mode" id="mode-continue" hidden>
+          <span class="mode__title">Continuar</span>
+          <span class="mode__desc" id="continue-desc">Retomar onde parou</span>
+        </button>
+        <button type="button" class="mode" id="mode-all">
+          <span class="mode__title">Todas as perguntas</span>
+          <span class="mode__desc" id="all-desc">Por ordem</span>
+        </button>
+        <button type="button" class="mode" id="mode-random">
+          <span class="mode__title">Aleatório</span>
+          <span class="mode__desc">Todas as perguntas por ordem aleatória</span>
+        </button>
+        <div class="mode mode--form">
+          <label class="mode__title" for="section-select">Por documento</label>
+          <div class="mode__row">
+            <select id="section-select" aria-label="Escolher documento"></select>
+            <button type="button" class="btn btn--primary" id="mode-section">Começar</button>
+          </div>
+        </div>
+        <button type="button" class="mode" id="mode-wrong">
+          <span class="mode__title">Só as que falhei</span>
+          <span class="mode__desc" id="wrong-desc">Ainda não falhou nenhuma pergunta</span>
+        </button>
+      </div>
+
+      <div class="start-footer">
+        <button type="button" class="btn btn--danger-ghost" id="reset-all">Recomeçar tudo</button>
+        <p class="hint" id="storage-hint"></p>
+      </div>
+    </section>
+
+    <!-- ECRÃ DE PERGUNTA -->
+    <section id="screen-quiz" class="screen" aria-labelledby="q-counter" hidden>
+      <div class="quiz-head">
+        <p class="q-counter" id="q-counter">Pergunta 1 de 1</p>
+        <p class="q-section" id="q-section"></p>
+        <div class="progress" role="progressbar" id="progress" aria-label="Progresso no teste" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="progress__bar" id="progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="card question-card">
+        <h2 class="question" id="q-text"></h2>
+        <div class="options" id="q-options" role="radiogroup" aria-labelledby="q-text"></div>
+        <div id="feedback" class="feedback" aria-live="polite"></div>
+        <div id="explanation" class="explanation" hidden>
+          <h3 class="explanation__title">Explicação</h3>
+          <p id="explanation-text"></p>
+        </div>
+      </div>
+
+      <nav class="quiz-nav" aria-label="Navegação entre perguntas">
+        <button type="button" class="btn" id="btn-prev"><span aria-hidden="true">←</span> Anterior</button>
+        <button type="button" class="btn btn--primary" id="btn-next">Seguinte <span aria-hidden="true">→</span></button>
+      </nav>
+      <p class="hint kbd-hint">Teclado: <kbd>1</kbd>–<kbd>4</kbd> ou <kbd>A</kbd>–<kbd>D</kbd> para responder, <kbd>Enter</kbd> ou <kbd>→</kbd> seguinte, <kbd>←</kbd> anterior.</p>
+
+      <details class="card jump" id="jump">
+        <summary>Ir para a pergunta…</summary>
+        <div class="jump__legend" aria-hidden="true">
+          <span><i class="dot"></i> Por responder</span>
+          <span><i class="dot dot--ok">✓</i> Certa</span>
+          <span><i class="dot dot--bad">✗</i> Errada</span>
+        </div>
+        <div class="jump__grid" id="jump-grid"></div>
+      </details>
+
+      <div class="quiz-footer">
+        <button type="button" class="btn btn--ghost" id="btn-home">Voltar ao início</button>
+      </div>
+    </section>
+
+    <!-- ECRÃ DE RESULTADOS -->
+    <section id="screen-results" class="screen" aria-labelledby="results-title" hidden>
+      <h1 id="results-title">Resultado</h1>
+      <div class="card result-hero">
+        <p class="result-score"><strong id="r-score">0 / 0</strong></p>
+        <p class="result-pct" id="r-pct">0%</p>
+        <p class="hint" id="r-detail"></p>
+      </div>
+
+      <div class="card">
+        <h2 class="h3">Por documento</h2>
+        <table class="sections-table">
+          <thead><tr><th scope="col">Documento</th><th scope="col" class="num">Certas</th><th scope="col" class="num">%</th></tr></thead>
+          <tbody id="r-sections"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h2 class="h3" id="r-wrong-title">Perguntas erradas</h2>
+        <ul class="wrong-list" id="r-wrong"></ul>
+      </div>
+
+      <div class="results-actions">
+        <button type="button" class="btn btn--primary" id="r-review">Rever as erradas</button>
+        <button type="button" class="btn" id="r-restart">Recomeçar</button>
+        <button type="button" class="btn btn--ghost" id="r-home">Voltar ao início</button>
+      </div>
+    </section>
+  </main>
+
+  <noscript><p class="container">Este teste precisa de JavaScript ativo.</p></noscript>
+
+  <script src="data/questions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
